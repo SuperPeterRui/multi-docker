@@ -1,0 +1,23 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t peterzara/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run peterzara/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t peterzara/multi-client ./client
+    - docker build -t peterzara/multi-nginx ./nginx
+    - docker build -t peterzara/multi-server ./server
+    - docker build -t peterzara/multi-worker ./worker
+    # log in the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # take those image and push them to docker hub
+    - docker push peterzara/multi-client 
+    - docker push peterzara/multi-nginx
+    - docker push peterzara/multi-server 
+    - docker push peterzara/multi-worker 
+
